@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol - WibePortal</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>WibePortal</h1>
+            <p>Yeni bir hesap oluştur</p>
+        </div>
+
+        <!-- Register Form -->
+        <div class="form-section">
+            <h2 style="text-align: center; color: var(--text-color); margin-bottom: 20px;">Kayıt Ol</h2>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Ad Soyad</label>
+                    <input type="text" id="regName" placeholder="Adınız Soyadınız" required>
+                </div>
+                <div class="form-group">
+                    <label>E-posta Adresi</label>
+                    <input type="email" id="regEmail" placeholder="ornek@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre</label>
+                    <input type="password" id="regPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">Kayıt Ol</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <p style="color: var(--text-light); font-size: 0.9rem;">
+                    Zaten hesabın var mı? <a href="index.html"
+                        style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Giriş Yap</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="divider">
+            <span>veya</span>
+        </div>
+
+        <button class="btn-google">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20">
+            Google ile devam et
+        </button>
+
+        <p class="error-message" id="errorMessage"></p>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+şimdi sende istedigim ana sayfada alan seçip ardından ders şeçimi yapıldıktan sonra  sana burda dedigim hocaları orda listeleceksin ardından o hocaya tıklanıldımı onun plalislerini orda listeleceksin ardından.

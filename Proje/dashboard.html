@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ana Sayfa - WibePortal</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase SDK (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="dashboard-body">
+
+    <!-- Sidebar / Sol Menü -->
+    <aside class="sidebar">
+        <!-- Normal View -->
+        <div id="sidebarMainView">
+            <div class="brand">
+                <h1>WibePortal</h1>
+            </div>
+
+            <!-- Profil Kartı (Sol Üst) -->
+            <div class="profile-card">
+                <div class="avatar">
+                    <img id="userImage" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar">
+                    <p id="streakCount"> Günlük Seri</p>
+                </div>
+                <div class="profile-info">
+                    <h3 id="userName">Kullanıcı Adı</h3>
+                    <p id="userEmail">email@az.com</p>
+                    <button class="btn-profile-edit" id="btnProfileEdit"><i class="fas fa-cog"></i></button>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-home"></i> Ana Sayfa</a></li>
+                    <li><a href="#"><i class="fas fa-play-circle"></i> Videolarım</a></li>
+                    <li><a href="#"><i class="fas fa-heart"></i> Favoriler</a></li>
+                    <li><a href="#"><i class="fas fa-chart-line"></i> İstatistikler</a></li>
+                </ul>
+            </nav>
+
+            <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button>
+        </div>
+
+        <!-- Edit View (Hidden by default) -->
+        <div id="sidebarEditView" class="sidebar-edit-view" style="display: none;">
+            <h3>Profili Düzenle</h3>
+
+            <div class="edit-avatar-section">
+                <img id="editUserImage" src="" alt="Avatar Preview">
+                <button id="btnNewAvatar" class="btn-text"><i class="fas fa-sync-alt"></i> Avatarı Yenile</button>
+            </div>
+
+            <div class="form-group-sidebar">
+                <label>Ad Soyad</label>
+                <input type="text" id="editDisplayName" placeholder="Adınız">
+            </div>
+
+            <div class="sidebar-actions">
+                <button id="btnSaveProfile" class="btn-save">Kaydet</button>
+                <button id="btnCancelEdit" class="btn-cancel">İptal</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Ana İçerik -->
+    <main class="main-content">
+
+        <header class="top-header">
+            <h2>Hoş Geldin! 👋</h2>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Eğitim ara...">
+            </div>
+        </header>
+
+        <!-- Navigasyon / Breadcrumb -->
+        <div class="navigation-bar" id="navBar" style="display: none;">
+            <button id="backBtn" class="back-btn"><i class="fas fa-arrow-left"></i> Geri Dön</button>
+            <span id="pageTitle" class="page-title">Kategoriler</span>
+        </div>
+
+        <!-- Dinamik İçerik Alanı (Kategoriler / Dersler / Videolar buraya gelecek) -->
+        <div class="content-grid" id="contentGrid">
+            <!-- JS ile doldurulacak -->
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="youtube-service.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
