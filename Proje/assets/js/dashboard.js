@@ -1162,19 +1162,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // --- SOL: Konu Seviyeleri ---
         const leftCol = document.createElement('div');
-        leftCol.style.background = 'white';
-        leftCol.style.padding = '20px';
-        leftCol.style.borderRadius = '15px';
-        leftCol.style.boxShadow = '0 5px 15px rgba(0,0,0,0.05)';
+        leftCol.className = 'stats-card';
         leftCol.innerHTML = '<h3 style="margin-bottom:15px; color:var(--primary-color);">📚 Konu Seviyeleri</h3><p>Yükleniyor...</p>';
         container.appendChild(leftCol);
 
         // --- SAĞ: Bugün İzlenen Kanallar ---
         const rightCol = document.createElement('div');
-        rightCol.style.background = 'white';
-        rightCol.style.padding = '20px';
-        rightCol.style.borderRadius = '15px';
-        rightCol.style.boxShadow = '0 5px 15px rgba(0,0,0,0.05)';
+        rightCol.className = 'stats-card';
         rightCol.innerHTML = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3><p>Yükleniyor...</p>';
         container.appendChild(rightCol);
 
@@ -1189,10 +1183,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (prefs && prefs.length > 0) {
                 let html = '<h3 style="margin-bottom:15px; color:var(--primary-color);">📚 Konu Seviyeleri</h3>';
                 html += '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;">';
-                html += '<thead><tr style="background:#f9f9f9; text-align:left;"><th style="padding:10px;">Konu</th><th style="padding:10px;">Seviye</th></tr></thead>';
+                html += '<thead><tr style="background:var(--secondary-color); text-align:left;"><th style="padding:10px;">Konu</th><th style="padding:10px;">Seviye</th></tr></thead>';
                 html += '<tbody>';
                 prefs.forEach(p => {
-                    html += `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${p.topic}</td><td style="padding:10px; font-weight:bold; color:var(--secondary-color);">${p.level}</td></tr>`;
+                    html += `<tr style="border-bottom:1px solid var(--input-border);"><td style="padding:10px;">${p.topic}</td><td style="padding:10px; font-weight:bold; color:var(--text-color);">${p.level}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 leftCol.innerHTML = html;
@@ -1204,7 +1198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (history && history.length > 0) {
                 let html = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3>';
                 html += '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;">';
-                html += '<thead><tr style="background:#f9f9f9; text-align:left;"><th style="padding:10px;">Kanal</th><th style="padding:10px;">Ders</th><th style="padding:10px;">İşlem</th></tr></thead>';
+                html += '<thead><tr style="background:var(--secondary-color); text-align:left;"><th style="padding:10px;">Kanal</th><th style="padding:10px;">Ders</th><th style="padding:10px;">İşlem</th></tr></thead>';
                 html += '<tbody>';
 
                 history.forEach(h => {
@@ -1214,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Link
                     const link = h.video_url;
 
-                    html += `<tr style="border-bottom:1px solid #eee;">
+                    html += `<tr style="border-bottom:1px solid var(--input-border);">
                         <td style="padding:10px; display:flex; align-items:center; gap:10px;">
                             <img src="https://api.dicebear.com/7.x/initials/svg?seed=${chName}" style="width:24px; height:24px; border-radius:50%;">
                             ${chName}
@@ -1406,10 +1400,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.style.gridColumn = '1 / -1';
         container.style.maxWidth = '800px';
         container.style.margin = '0 auto';
-        container.style.background = 'white';
-        container.style.padding = '30px';
-        container.style.borderRadius = '15px';
-        container.style.boxShadow = '0 5px 20px rgba(0,0,0,0.05)';
+        container.className = 'ai-container';
+        // Inline styles removed, handled by CSS class 'ai-container'
         contentGrid.appendChild(container);
 
         // Header
@@ -1462,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             quizData.questions.forEach((q, index) => {
                 html += `
-                    <div style="margin-bottom:20px; background:#f9f9f9; padding:20px; border-radius:10px;">
+                    <div class="quiz-question-card">
                         <p style="font-weight:bold; margin-bottom:10px;">${q.text}</p>
                 `;
 
@@ -1518,22 +1510,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
-                    <div style="background:#e8f5e9; padding:20px; border-radius:10px;">
-                        <h4 style="color:#2e7d32; margin-bottom:10px;"><i class="fas fa-check-circle"></i> Güçlü Yönlerin</h4>
+                    <div class="result-box-success">
+                        <h4 style="margin-bottom:10px;"><i class="fas fa-check-circle"></i> Güçlü Yönlerin</h4>
                         <ul>
                             ${result.strengths.map(s => `<li>${s}</li>`).join('')}
                         </ul>
                     </div>
-                    <div style="background:#ffebee; padding:20px; border-radius:10px;">
-                        <h4 style="color:#c62828; margin-bottom:10px;"><i class="fas fa-exclamation-circle"></i> Geliştirmen Gerekenler</h4>
+                    <div class="result-box-danger">
+                        <h4 style="margin-bottom:10px;"><i class="fas fa-exclamation-circle"></i> Geliştirmen Gerekenler</h4>
                         <ul>
                             ${result.weaknesses.map(s => `<li>${s}</li>`).join('')}
                         </ul>
                     </div>
                 </div>
 
-                <div style="background:#fff3e0; padding:25px; border-radius:10px; border:2px solid #ffe0b2;">
-                    <h3 style="color:#ef6c00; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Sana Özel Çalışma Planı</h3>
+                <div class="result-box-warning">
+                    <h3 style="margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Sana Özel Çalışma Planı</h3>
                     <p style="margin-bottom:15px; font-style:italic;">"${result.plan.suggestion}"</p>
                     <div style="background:white; padding:15px; border-radius:5px;">
                         <h5 style="margin-bottom:10px;">Program: ${result.plan.schedule}</h5>
