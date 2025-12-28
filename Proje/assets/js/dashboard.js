@@ -62,10 +62,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (streakCountEl) {
-            streakCountEl.innerText = `🔥 ${streak} Günlük Seri`;
-            streakCountEl.style.color = '#ff9f1c';
-            streakCountEl.style.fontWeight = 'bold';
-            streakCountEl.style.fontSize = '0.9rem';
+            streakCountEl.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
+                    <span style="font-size: 1.2rem; font-weight: bold; color: #ff9f1c;">🔥 ${streak}</span>
+                    <span style="font-size: 0.75rem; color: #aaa;">Günlük Seri</span>
+                </div>
+            `;
+            streakCountEl.style.color = '';
+            streakCountEl.style.fontWeight = '';
+            streakCountEl.style.fontSize = '';
         }
 
     } else {
