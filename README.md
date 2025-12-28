@@ -2,7 +2,7 @@
 
 WibePortal, öğrencilerin öğrenme süreçlerini optimize etmek, kişiselleştirilmiş ders çalışma planları oluşturmak ve yapay zeka desteğiyle eksiklerini kapatmak için tasarlanmış modern bir web tabanlı eğitim platformudur.
 
-![WibePortal Ana Sayfa](https://via.placeholder.com/800x400?text=WibePortal+Dashboard)
+![WibePortal Ana Sayfa]()
 
 ## 🌟 Öne Çıkan Özellikler
 
