@@ -1224,7 +1224,112 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 html += '</tbody></table></div>';
+
+                // --- GÜN ÖZETİ BUTONU ---
+                html += `
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button id="btnDaySummary" class="btn-save" style="background: #9b59b6; width: 100%;">
+                            <i class="fas fa-magic"></i> Gün Özeti ve Test Çıkar (AI)
+                        </button>
+                    </div>
+                    <div id="daySummaryResult" style="margin-top: 20px; display: none;"></div>
+                `;
+
                 rightCol.innerHTML = html;
+
+                // Event Listener
+                setTimeout(() => {
+                    const btn = document.getElementById('btnDaySummary');
+                    const resDiv = document.getElementById('daySummaryResult');
+                    if (btn) {
+                        btn.addEventListener('click', async () => {
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Hazırlanıyor...';
+
+                            try {
+                                const result = await window.AIAnalyst.generateDaySummary(history);
+
+                                // Render Result
+
+                                // Markdown to HTML (using marked)
+                                const notesHtml = window.marked ? window.marked.parse(result.notes) : result.notes;
+
+                                let resHtml = `
+                                    <div id="summaryContent" style="background: white; padding: 30px; border-radius: 10px; border: 1px solid #eee; text-align: left;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                            <h4 style="color: #9b59b6; margin:0;">✨ Günün Özeti & Çalışma Notları</h4>
+                                            <button id="btnDownloadPdf" class="btn-save" style="background: #e74c3c; font-size: 0.9rem; padding: 5px 15px;">
+                                                <i class="fas fa-file-pdf"></i> PDF İndir
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="markdown-body" style="font-size: 1rem; color: #333; line-height: 1.6; margin-bottom: 30px;">
+                                            ${notesHtml}
+                                        </div>
+                                        
+                                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+                                        <h5 style="margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; color: #333;">🧠 Gün Sonu Testi</h5>
+                                `;
+
+                                if (result.quiz && result.quiz.length > 0) {
+                                    result.quiz.forEach((q, idx) => {
+                                        resHtml += `
+                                            <div style="margin-bottom: 20px; page-break-inside: avoid;">
+                                                <p style="font-weight: 600; font-size: 1rem; margin-bottom: 10px;">${idx + 1}. ${q.question}</p>
+                                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        `;
+                                        q.options.forEach((opt, optIdx) => {
+                                            const isCorrect = (optIdx === q.correct);
+                                            resHtml += `
+                                                <label class="quiz-opt" style="font-size: 0.95rem; cursor: pointer; display:block; padding:5px; border-radius:5px; border:1px solid transparent; transition:background 0.2s;">
+                                                    <input type="radio" name="dq_${idx}" onclick="this.parentElement.style.background = '${isCorrect ? '#d4edda' : '#f8d7da'}'; this.parentElement.style.borderColor = '${isCorrect ? '#c3e6cb' : '#f5c6cb'}';"> ${opt}
+                                                </label>
+                                            `;
+                                        });
+                                        resHtml += `</div></div>`;
+                                    });
+                                } else {
+                                    resHtml += '<p>Test oluşturulamadı.</p>';
+                                }
+
+                                resHtml += '</div>';
+
+                                resDiv.innerHTML = resHtml;
+                                resDiv.style.display = 'block';
+                                btn.innerHTML = '<i class="fas fa-check"></i> Tamamlandı';
+
+                                // PDF Button Logic
+                                document.getElementById('btnDownloadPdf').addEventListener('click', () => {
+                                    const element = document.getElementById('summaryContent');
+                                    // Butonu PDF'de gizle
+                                    const btnPdf = document.getElementById('btnDownloadPdf');
+                                    btnPdf.style.display = 'none';
+
+                                    const opt = {
+                                        margin: 10,
+                                        filename: 'Gunluk_Calisma_Ozeti.pdf',
+                                        image: { type: 'jpeg', quality: 0.98 },
+                                        html2canvas: { scale: 2 },
+                                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                                    };
+
+                                    // html2pdf
+                                    window.html2pdf().set(opt).from(element).save().then(() => {
+                                        btnPdf.style.display = 'block'; // Geri getir
+                                    });
+                                });
+
+                            } catch (e) {
+                                console.error(e);
+                                btn.innerHTML = 'Hata Oluştu';
+                                btn.disabled = false;
+                            }
+                        });
+                    }
+                }, 0);
+
+
             } else {
                 rightCol.innerHTML = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3><p style="color:#666; font-style:italic;">Bugün henüz video izlenmedi.</p>';
             }

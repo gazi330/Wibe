@@ -240,6 +240,43 @@ class AIAnalyst {
             };
         }
     }
+    /**
+     * Günlük Video İzleme Özeti ve Testi
+     * @param {Array} videos - [{ video_url, lesson, exam, ... }]
+     */
+    async generateDaySummary(videos) {
+        console.log(`Günlük Özet Hazırlanıyor (${videos.length} video)`);
+
+        const videoListStr = videos.map(v => `- Ders: ${v.lesson} (${v.exam || ''}), URL: ${v.video_url}`).join('\n');
+
+        const prompt = `
+        Aşağıda öğrencinin bugün izlediği videoların listesi var:
+        ${videoListStr}
+
+        Görevin:
+        1. "notes": Bu videoların kapsadığı konulardan kapsamlı ve öğretici DERS NOTLARI çıkar. Markdown formatı kullan (# Başlıklar, - Maddeler, **Kalın**). Konu anlatımı gibi olsun.
+        2. "quiz": İzlenen konularla ilgili 5 adet çoktan seçmeli soru hazırla.
+
+        Çıktı Formatı (Saf JSON):
+        {
+            "notes": "# Günün Konusu: ...\\n\\n## Önemli Noktalar\\n- ...",
+            "quiz": [
+                { "question": "Soru 1?", "options": ["A", "B", "C", "D"], "correct": 0 }
+            ]
+        }
+        `;
+
+        try {
+            return await this.callGemini(prompt);
+        } catch (err) {
+            console.error("Günlük özet hatası:", err);
+            // Fallback
+            return {
+                notes: "Üzgünüm, şu an bağlantı sorunu nedeniyle özet çıkaramıyorum.",
+                quiz: []
+            };
+        }
+    }
 }
 
 // Global erişim için
