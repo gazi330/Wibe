@@ -72,8 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Google Login Ortak Mantık
     const googleBtn = document.querySelector('.btn-google');
     if (googleBtn) {
-        googleBtn.addEventListener('click', () => {
-            showStatus("Google ile giriş için Supabase ayarlarının yapılması gerekir.", 'error');
+        googleBtn.addEventListener('click', async () => {
+            try {
+                showStatus("Google ile giriş yapılıyor...", 'success'); // Inform user
+                await authService.signInWithGoogle();
+            } catch (error) {
+                showStatus("Google giriş hatası: " + error.message, 'error');
+            }
         });
     }
 });

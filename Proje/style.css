@@ -36,6 +36,104 @@
     /* Hafif renkli gÃ¶lge */
 }
 
+/* --- DARK MODE VARIABLES --- */
+[data-theme="dark"] {
+    --secondary-color: #0f111a;
+    --white: #1a1d2d;
+    /* Card bg */
+    --text-color: #e2e8f0;
+    --text-light: #94a3b8;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+
+    /* Input & Form adjustments */
+    --input-bg: #24293e;
+    --input-border: #3f445e;
+}
+
+/* --- GLOBAL DARK MODE STYLES --- */
+[data-theme="dark"] body {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    background: linear-gradient(120deg, #0f111a 0%, #161925 100%);
+}
+
+[data-theme="dark"] .container,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .search-bar,
+[data-theme="dark"] .filter-btn,
+[data-theme="dark"] .video-card,
+[data-theme="dark"] .category-card,
+[data-theme="dark"] .teacher-card,
+[data-theme="dark"] .playlist-card {
+    background: var(--white);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group-sidebar input,
+[data-theme="dark"] .search-bar input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .search-bar input:focus {
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-google {
+    background: var(--white);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .btn-google:hover {
+    background: #2e354f;
+}
+
+[data-theme="dark"] .divider::before,
+[data-theme="dark"] .divider::after {
+    border-color: var(--input-border);
+}
+
+/* Dashboard Specifics */
+[data-theme="dark"] .profile-card {
+    background: #24293e;
+    border-color: #3f445e;
+}
+
+[data-theme="dark"] .profile-card .avatar img {
+    background: var(--white);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .menu a:hover,
+[data-theme="dark"] .menu li.active a {
+    background: rgba(67, 97, 238, 0.15);
+}
+
+[data-theme="dark"] .top-header h2,
+[data-theme="dark"] .video-info h3,
+[data-theme="dark"] .category-card h3 {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .dashboard-body {
+    background-color: var(--secondary-color);
+}
+
+[data-theme="dark"] .filter-btn {
+    border-color: var(--input-border);
+}
+
+[data-theme="dark"] .filter-btn:hover,
+[data-theme="dark"] .filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
 body {
     background-color: var(--secondary-color);
     /* Arka plana hafif bir desen veya gradient ekleyelim */
@@ -745,6 +843,54 @@ body {
     font-size: 0.9rem;
 }
 
+/* --- SPECIAL INVERTED CARD (Veri EÄŸitimi) --- */
+/* Default (Light Mode) -> Make this card Dark */
+.special-inverted-card {
+    background: linear-gradient(135deg, #1e2024 0%, #23272b 100%) !important;
+    border-color: #343a40 !important;
+}
+
+.special-inverted-card h3 {
+    color: #f8f9fa !important;
+}
+
+.special-inverted-card p {
+    color: #adb5bd !important;
+}
+
+.special-inverted-card .category-icon {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #4cc9f0 !important;
+}
+
+.special-inverted-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    transform: translateY(-8px);
+}
+
+/* Dark Mode -> Make this card Light */
+[data-theme="dark"] .special-inverted-card {
+    background: #ffffff !important;
+    border-color: #e1e1e1 !important;
+}
+
+[data-theme="dark"] .special-inverted-card h3 {
+    color: #2b2d42 !important;
+}
+
+[data-theme="dark"] .special-inverted-card p {
+    color: #495057 !important;
+}
+
+[data-theme="dark"] .special-inverted-card .category-icon {
+    background: rgba(67, 97, 238, 0.1) !important;
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .special-inverted-card:hover {
+    box-shadow: 0 20px 40px rgba(255, 255, 255, 0.1) !important;
+}
+
 /* Hoca (Teacher) KartlarÄ± */
 .teacher-card {
     background: var(--white);
@@ -864,4 +1010,174 @@ body {
 .subject-arrow {
     color: var(--primary-color);
     font-size: 1.2rem;
+}
+/* --- SMART STUDY BUBBLE --- */
+.smart-bubble-container {
+    padding: 40px;
+    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(58, 12, 163, 0.05) 100%);
+    border-radius: 24px;
+    text-align: center;
+    margin-bottom: 40px;
+    border: 2px dashed rgba(67, 97, 238, 0.3);
+}
+
+.smart-bubble-container h3 {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+}
+
+.smart-bubble-input-wrapper {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.smart-bubble-input {
+    width: 100%;
+    padding: 20px 30px;
+    padding-right: 60px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.2);
+    transition: all 0.3s ease;
+}
+
+.smart-bubble-input:focus {
+    transform: scale(1.02);
+    box-shadow: 0 15px 40px rgba(67, 97, 238, 0.3);
+    outline: none;
+}
+
+.smart-bubble-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-gradient);
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.smart-bubble-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* --- SPLIT SCREEN GRID (3 PANES) --- */
+.split-screen-grid {
+    display: none; /* JS ile açýlacak */
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 20px;
+    height: 80vh; /* Tam ekran yüksekliði */
+    margin-top: 20px;
+}
+
+.pane {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.pane-header {
+    padding: 15px;
+    background: rgba(67, 97, 238, 0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pane-header h4 {
+    font-size: 1rem;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pane-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Maximize Logic */
+.pane-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.pane-btn:hover {
+    color: var(--primary-color);
+}
+
+.pane.expanded {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* QUIZ STYLES inside Pane */
+.quiz-question {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.quiz-option {
+    display: block;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.quiz-option:hover {
+    background: #e2e6ea;
+}
+
+.quiz-option.correct {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.quiz-option.wrong {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* NOTES STYLES */
+.notes-content h1, .notes-content h2, .notes-content h3 {
+    color: var(--text-color);
+    margin-bottom: 10px;
+    margin-top: 20px;
+}
+.notes-content p, .notes-content li {
+    color: var(--text-color);
+    line-height: 1.6;
+    margin-bottom: 10px;
 }

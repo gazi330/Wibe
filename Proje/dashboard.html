@@ -38,14 +38,24 @@
 
             <nav class="menu">
                 <ul>
-                    <li class="active"><a href="#"><i class="fas fa-home"></i> Ana Sayfa</a></li>
-                    <li><a href="#"><i class="fas fa-play-circle"></i> Videolarım</a></li>
-                    <li><a href="#"><i class="fas fa-heart"></i> Favoriler</a></li>
-                    <li><a href="#"><i class="fas fa-chart-line"></i> İstatistikler</a></li>
+                    <li class="active"><a href="#" id="menuHome"><i class="fas fa-home"></i> Ana Sayfa</a></li>
+                    <li><a href="#" id="menuVideos"><i class="fas fa-play-circle"></i> Videolarım</a></li>
+                    <li><a href="#" id="menuFavorites"><i class="fas fa-heart"></i> Favoriler</a></li>
+                    <li><a href="#" id="menuStats"><i class="fas fa-chart-line"></i> İstatistikler</a></li>
+                    <li><a href="#" id="menuAI"><i class="fas fa-robot"></i> AI Koçum</a></li>
                 </ul>
             </nav>
 
             <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button>
+
+            <!-- Theme Toggle placed at bottom of menu or sidebar actions -->
+            <div style="margin-top: 10px; padding: 0 0 0 12px;">
+                <button id="sidebarThemeToggle" class="btn-logout"
+                    style="color: var(--text-light); width: 100%; justify-content: flex-start; padding-left: 0;">
+                    <i class="fas fa-moon"></i>
+                    <span class="theme-text">Gece Modu</span>
+                </button>
+            </div>
         </div>
 
         <!-- Edit View (Hidden by default) -->
@@ -97,6 +107,8 @@
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="youtube-service.js"></script>
+    <script src="theme.js"></script>
+    <script src="ai-analyst.js"></script>
     <script src="dashboard.js"></script>
 </body>
 

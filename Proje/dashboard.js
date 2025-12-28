@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const { data, error } = await supabaseClient
             .from('youtube_channels')
-            .select('id,channel_name,channel_url,lesson, exam, youtube_channel_likes(user_id, created_at)');
+            .select('id,channel_name,channel_url,lesson, exam, difficulty_level, youtube_channel_likes(user_id, created_at)');
 
         if (error) {
             console.error("Kanal verileri çekilemedi:", error);
@@ -183,13 +183,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
+    // Dinamik Şema (İskelet)
+    // Subjects kısımları kodla doldurulacak
     const schema = {
         'LGS': {
             icon: 'fa-graduation-cap',
             desc: 'Liseye Geçiş Sınavı',
             subjects: {
-                'LGS Matematik': {},
-                'LGS Fen Bilimleri': {}
+                'Matematik': {},
+                'Fen Bilimleri': {},
+                'Türkçe': {},
+                'İnkılap Tarihi': {},
+                'İngilizce': {},
+                'Din Kültürü': {}
             }
         },
         'YKS': {
@@ -198,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             subCategories: {
                 'TYT': {
                     desc: 'Temel Yeterlilik Testi',
-                    subjects: { 'Matematik': {}, 'Fizik': {}, 'Kimya': {}, 'Biyoloji': {}, 'Türkçe': {}, 'Tarih': {}, 'Coğrafya': {} }
+                    subjects: { 'Matematik': {}, 'Fizik': {}, 'Kimya': {}, 'Biyoloji': {}, 'Türkçe': {}, 'Tarih': {}, 'Coğrafya': {}, 'Felsefe': {}, 'Din Kültürü': {} }
                 },
                 'AYT': {
                     desc: 'Alan Yeterlilik Testleri',
@@ -224,10 +230,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         'VERİ EĞİTİMİ': {
             icon: 'fa-database',
             desc: 'Veri Bilimi ve Analitiği',
-            subjects: { 'Veri Bilimi': {}, 'Big Data': {}, 'Machine Learning': {}, 'SQL': {}, 'Veri Analizi': {} }
-        },
-
+            subjects: {} // DB'den dolacak (Hala dinamik kalsın istenebilir, aksi belirtilmedi)
+        }
     };
+
+    function populateSchemaFromChannels(channels) {
+        // İskeleti temizle (tekrar çağrılırsa diye)
+        // DİKKAT: Artık çoğu statik olduğu için hepsini temizlememeliyiz.
+        // Sadece dinamik olanları temizleyelim.
+        if (schema['VERİ EĞİTİMİ'] && schema['VERİ EĞİTİMİ'].subjects) {
+            schema['VERİ EĞİTİMİ'].subjects = {};
+        }
+
+        channels.forEach(ch => {
+            if (!ch.exam || !ch.lesson) return;
+
+            const exam = ch.exam.trim().toUpperCase(); // LGS, TYT, AYT, KODLAMA...
+            const lesson = ch.lesson.trim();
+
+            // ALIAS: CODING -> KODLAMA eşleştirmesi
+            let schemaKey = exam;
+            if (exam === 'CODING') schemaKey = 'KODLAMA';
+
+            // STATİK OLANLARI ATLA
+            // LGS, YKS (TYT, AYT), KODLAMA, KPSS, DİL statik.
+            // Sadece VERİ EĞİTİMİ (veya tanımlı olmayan yeni kategoriler) dinamik olabilir.
+
+            if (['LGS', 'TYT', 'AYT', 'KODLAMA', 'KPSS', 'DİL'].includes(schemaKey)) {
+                return;
+            }
+
+            // 1. Durum: Ana Kategoriler
+            if (schema[schemaKey]) {
+                if (!schema[schemaKey].subjects) schema[schemaKey].subjects = {};
+                schema[schemaKey].subjects[lesson] = {};
+            }
+            // 2. Durum: Alt Kategorili Sınavlar (Varsa)
+            else {
+                // YKS statik olduğu için buradaki TYT/AYT kontrolüne gerek kalmadı ama
+                // yine de genel yapı bozulmasın diye bırakılabilir veya kaldırılabilir.
+            }
+        });
+    }
+
+    // Veriler 170. satırda çekilmişti, şimdi şemayı doldur:
+    populateSchemaFromChannels(globalChannels);
 
 
     // --- 3. NAVİGASYON MANTIĞI ---
@@ -235,6 +282,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     const navBar = document.getElementById('navBar');
     const backBtn = document.getElementById('backBtn');
     const pageTitle = document.getElementById('pageTitle');
+
+    // Sidebar Menu Elemanları
+    const menuHome = document.getElementById('menuHome');
+    const menuVideos = document.getElementById('menuVideos');
+    const menuFavorites = document.getElementById('menuFavorites');
+    const menuStats = document.getElementById('menuStats');
+    const menuAI = document.getElementById('menuAI');
+    const allMenuItems = document.querySelectorAll('.menu ul li');
+
+    function setActiveMenu(selectedItem) {
+        allMenuItems.forEach(item => item.classList.remove('active'));
+        if (selectedItem) selectedItem.parentElement.classList.add('active');
+    }
+
+    menuHome.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActiveMenu(menuHome);
+        renderMainCategories();
+    });
+
+    menuVideos.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActiveMenu(menuVideos);
+        renderMyVideosPage();
+    });
+
+    menuFavorites.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActiveMenu(menuFavorites);
+        renderFavoritesPage();
+    });
+
+    menuStats.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActiveMenu(menuStats);
+        renderStatsPage();
+    });
+
+    menuAI.addEventListener('click', (e) => {
+        e.preventDefault();
+        setActiveMenu(menuAI);
+        renderAIPage();
+    });
 
     // State
     let currentLevel = 'main'; // main -> category -> subCategory -> subject -> teacher -> playlist -> video
@@ -247,11 +337,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Başlangıç
     renderMainCategories();
 
+    // ... (Back button logic) ...
+
+
     backBtn.addEventListener('click', () => {
-        if (currentLevel === 'video') {
+        if (currentLevel === 'favorites') {
+            renderMainCategories();
+        } else if (currentLevel === 'video') {
             renderTeacherContent(selectedTeacher); // Video -> Hoca İçeriği'ne dön
         } else if (currentLevel === 'playlist') { // Artık playlist ve popüler videolar aynı seviyede (Teacher Content)
-            renderTeachers(selectedSubject); // Hoca İçeriği -> Hoca Listesi'ne dön
+            if (selectedSubject) {
+                renderTeachers(selectedSubject);
+            } else {
+                // Favorilerden gelmiş olabiliriz, geri dönünce favorilere gitsin
+                renderFavoritesPage();
+            }
         } else if (currentLevel === 'teacher') {
             renderSubjects(selectedCategory); // Hoca -> Ders'e dön
         } else if (currentLevel === 'subject') {
@@ -267,6 +367,252 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // --- FAVORİLER SAYFASI ---
+    async function renderFavoritesPage() {
+        currentLevel = 'favorites';
+        navBar.style.display = 'none';
+        contentGrid.innerHTML = '';
+
+        // Başlık ve Tablar
+        const header = document.createElement('div');
+        header.style.gridColumn = '1 / -1';
+        header.innerHTML = `
+            <h2><i class="fas fa-heart" style="color:#e74c3c;"></i> Favorilerim</h2>
+            <div style="display:flex; gap:15px; margin-top:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <button id="tabTeachers" style="background:var(--primary-color); color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">Hocalar</button>
+                <button id="tabVideos" style="background:#f0f0f0; color:#666; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">Videolar</button>
+            </div>
+        `;
+        contentGrid.appendChild(header);
+
+        // İçerik Alanı
+        const favContent = document.createElement('div');
+        favContent.style.gridColumn = '1 / -1';
+        favContent.style.display = 'grid';
+        favContent.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))'; // Teacher card grid
+        favContent.style.gap = '20px';
+        favContent.style.marginTop = '20px';
+        favContent.id = 'favContent';
+        contentGrid.appendChild(favContent);
+
+        // Default: Hocalar
+        loadFavoriteTeachers(favContent);
+
+        // Event Listeners
+        document.getElementById('tabTeachers').addEventListener('click', (e) => {
+            updateTabStyles(e.target, document.getElementById('tabVideos'));
+            loadFavoriteTeachers(favContent);
+        });
+
+        document.getElementById('tabVideos').addEventListener('click', (e) => {
+            updateTabStyles(e.target, document.getElementById('tabTeachers'));
+            favContent.innerHTML = '<p style="margin-top:20px; color:#666;">Favori videolar özelliği yakında eklenecek.</p>';
+        });
+
+        function updateTabStyles(active, inactive) {
+            active.style.background = 'var(--primary-color)';
+            active.style.color = 'white';
+            inactive.style.background = '#f0f0f0';
+            inactive.style.color = '#666';
+        }
+    }
+
+    async function loadFavoriteTeachers(container) {
+        container.innerHTML = '<p>Yükleniyor...</p>';
+
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        try {
+            // youtube_channel_likes üzerinden kanalları çek
+            // Join işlemi: youtube_channel_likes -> youtube_channels
+            const { data, error } = await supabaseClient
+                .from('youtube_channel_likes')
+                .select(`
+                    channel_id,
+                    youtube_channels (
+                        id, channel_name, channel_url, lesson, exam, youtube_channel_likes(user_id)
+                    )
+                `)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>Henüz favori hocan yok.</p>';
+                return;
+            }
+
+            const teachers = data.map(item => {
+                const ch = item.youtube_channels;
+                // Like count'u hesaplamak için global datadan veya yeniden sorgudan faydalanabiliriz. 
+                // Buradaki join sadece user'ın like'larını getirdiğinden count eksik olabilir mi?
+                // Evet, youtube_channel_likes(user_id) sadece bu relation'ı getirir. 
+                // Basitlik adına statik veya "1" gösterebiliriz ya da globalChannels'dan bulabiliriz.
+
+                // Global'den bulmaya çalışalım (performanslı)
+                const globalCh = globalChannels.find(g => g.id === ch.id);
+                const count = globalCh ? (globalCh.youtube_channel_likes?.length || 0) : 1;
+
+                return {
+                    name: ch.channel_name,
+                    image: `https://api.dicebear.com/7.x/initials/svg?seed=${ch.channel_name}`,
+                    isLiked: true, // Zaten favorilerdeyiz
+                    likeCount: count,
+                    dbId: ch.id,
+                    channelUrl: ch.channel_url
+                };
+            });
+
+            // Kartları Render Et (Reusing render logic slightly)
+            teachers.forEach(teacher => {
+                const div = document.createElement('div');
+                div.className = 'teacher-card';
+                div.style.position = 'relative';
+
+                const heartColor = '#e74c3c';
+                const heartClass = 'fas';
+
+                div.innerHTML = `
+                    <div class="like-badge" style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; align-items:center; gap:5px; z-index:2; cursor:pointer;">
+                        <i class="${heartClass} fa-heart" style="color:${heartColor};"></i>
+                        <span style="font-size:0.9rem; font-weight:bold; color:#333;">${teacher.likeCount}</span>
+                    </div>
+                    <div class="teacher-avatar">
+                       <img src="${teacher.image}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                    </div>
+                    <h3>${teacher.name}</h3>
+                    <p>${teacher.name} Kanalı</p>
+                 `;
+
+                // Kalp Tıklama
+                const likeBadge = div.querySelector('.like-badge');
+                likeBadge.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await toggleChannelLike(teacher, likeBadge);
+                    // Favorilerden kaldırdıysak anında listeden sil
+                    if (!teacher.isLiked) {
+                        div.remove();
+                        if (container.children.length === 0) container.innerHTML = '<p>Henüz favori hocan yok.</p>';
+                    }
+                });
+
+                div.addEventListener('click', () => {
+                    selectedTeacher = teacher;
+                    // Lazy load logic... (Kopyalamak yerine, renderTeachers içindeki mantığı fonksiyona çevirmek daha iyi olurdu ama şimdilik duplicate)
+                    // Basitçe:
+                    teacher.playlists = [];
+                    teacher.popularVideos = [];
+
+                    // Lazy load
+                    (async () => {
+                        try {
+                            const [pl, pop] = await Promise.all([
+                                YouTubeService.getPlaylistsByChannelUrl(teacher.channelUrl),
+                                YouTubeService.getPopularVideosByChannelUrl(teacher.channelUrl)
+                            ]);
+                            teacher.playlists = pl || [];
+                            teacher.popularVideos = pop || [];
+                            renderTeacherContent(teacher);
+                        } catch (e) { console.error(e); }
+                    })();
+                    renderTeacherContent(teacher); // İlk boş açılır, sonra dolar (veya loading eklenir)
+                });
+
+                container.appendChild(div);
+            });
+
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p>Hata oluştu.</p>';
+        }
+    }
+
+    async function toggleChannelLike(teacher, badgeElement) {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const icon = badgeElement.querySelector('i');
+        const countSpan = badgeElement.querySelector('span');
+
+        // Optimistic UI Update
+        const wasLiked = teacher.isLiked;
+        teacher.isLiked = !wasLiked;
+        teacher.likeCount = wasLiked ? teacher.likeCount - 1 : teacher.likeCount + 1;
+
+        icon.className = teacher.isLiked ? 'fas fa-heart' : 'far fa-heart';
+        icon.style.color = teacher.isLiked ? '#e74c3c' : '#ccc';
+        countSpan.innerText = teacher.likeCount;
+
+        try {
+            if (wasLiked) {
+                // Sil (Unlike)
+                const { error } = await supabaseClient
+                    .from('youtube_channel_likes')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('channel_id', teacher.dbId);
+                if (error) throw error;
+            } else {
+                // Ekle (Like)
+                const { error } = await supabaseClient
+                    .from('youtube_channel_likes')
+                    .insert({ user_id: user.id, channel_id: teacher.dbId });
+                if (error) throw error;
+            }
+
+            // Global arrayi de güncelle ki diğer sayfalarda doğru görünsün
+            const globalCh = globalChannels.find(g => g.id === teacher.dbId);
+            if (globalCh) {
+                if (!globalCh.youtube_channel_likes) globalCh.youtube_channel_likes = [];
+                if (wasLiked) {
+                    // Remove user like
+                    globalCh.youtube_channel_likes = globalCh.youtube_channel_likes.filter(l => l.user_id !== user.id);
+                } else {
+                    // Add user like
+                    globalCh.youtube_channel_likes.push({ user_id: user.id });
+                }
+            }
+
+        } catch (err) {
+            console.error("Like işlemi hatası:", err);
+            // Revert UI
+            teacher.isLiked = wasLiked;
+            teacher.likeCount = wasLiked ? teacher.likeCount : teacher.likeCount - 1; // Revert count
+            icon.className = wasLiked ? 'fas fa-heart' : 'far fa-heart';
+            icon.style.color = wasLiked ? '#e74c3c' : '#ccc';
+            countSpan.innerText = teacher.likeCount;
+            alert("İşlem başarısız.");
+        }
+    }
+
+
+    // --- YARDIMCI FONKSİYONLAR ---
+
+    async function saveVideoHistory(channelId, videoUrl, lesson, exam) {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        try {
+            const { error } = await supabaseClient
+                .from('user_video_history')
+                .insert({
+                    user_id: user.id,
+                    channel_id: channelId,
+                    video_url: videoUrl,
+                    lesson: lesson,
+                    exam: exam
+                });
+
+            if (error) console.error("History Save Error:", error);
+            else console.log("Video history saved.");
+        } catch (err) {
+            console.error("History Save Exception:", err);
+        }
+    }
+
     // --- RENDER FONKSİYONLARI ---
 
     function renderMainCategories() {
@@ -279,6 +625,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cat = schema[catKey];
             const div = document.createElement('div');
             div.className = 'category-card';
+
+            // Special case for Data Education to have inverted theme
+            if (catKey === 'VERİ EĞİTİMİ') {
+                div.classList.add('special-inverted-card');
+            }
+
             div.innerHTML = `
                 <div class="category-icon"><i class="fas ${cat.icon}"></i></div>
                 <h3>${catKey}</h3>
@@ -295,6 +647,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             contentGrid.appendChild(div);
         });
     }
+
+    // ... (renderSubCategories and renderSubjects remain unchanged, skipping to renderPopularVideosList update) ...
 
     function renderSubCategories(catKey) {
         currentLevel = 'subCategory';
@@ -354,6 +708,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ... (fetchTeacherData, renderTeachers, toggleChannelLike, renderTeacherContent unchanged) ...
+
+
     // --- DATA FETCHING & API ---
 
     async function fetchTeacherData(examType, lessonType) {
@@ -365,15 +722,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Normalizasyon
         const normalize = (str) => str ? str.toString().trim().toLocaleLowerCase('tr-TR') : '';
 
+        // SEARCH EXAM: Gelen examType "KODLAMA" ise, DB'de "coding" de olabilir.
         const searchExam = normalize(examType);
+
         const searchLesson = normalize(lessonType);
         const searchLessonShort = normalize(lessonType.replace(/^(LGS|KPSS|DİL)\s+/i, ''));
 
         // Filtreleme
         let filtered = globalChannels.filter(ch => {
             const dbExam = normalize(ch.exam);
-            const dbLesson = normalize(ch.lesson);
-            if (dbExam !== searchExam) return false;
+            let dbLesson = normalize(ch.lesson);
+
+            // ALIAS: DB'den gelen özel formatları düzelt
+            if (dbLesson === 'veri_bilimi') dbLesson = 'veri bilimi';
+            if (dbLesson === 'csharp') dbLesson = 'c#';
+
+            // KODLAMA - CODING Eşleşmesi
+            let matchesExam = false;
+            if (dbExam === searchExam) matchesExam = true;
+            else if (searchExam === 'kodlama' && dbExam === 'coding') matchesExam = true; // Özel Alias
+            else if (searchExam === 'coding' && dbExam === 'kodlama') matchesExam = true; // Ters Alias
+
+            if (!matchesExam) return false;
+
             return dbLesson === searchLesson || dbLesson === searchLessonShort;
         });
 
@@ -442,7 +813,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const heartClass = teacher.isLiked ? 'fas' : 'far';
 
             div.innerHTML = `
-                <div class="like-badge" style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; align-items:center; gap:5px; z-index:2;">
+                <div class="like-badge" style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; align-items:center; gap:5px; z-index:2; cursor:pointer;">
                     <i class="${heartClass} fa-heart" style="color:${heartColor};"></i>
                     <span style="font-size:0.9rem; font-weight:bold; color:#333;">${teacher.likeCount}</span>
                 </div>
@@ -453,6 +824,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <h3>${teacher.name}</h3>
                 <p>Kanalı Görüntüle</p>
              `;
+
+            // Kalp Tıklama
+            const likeBadge = div.querySelector('.like-badge');
+            likeBadge.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await toggleChannelLike(teacher, likeBadge);
+            });
+
             div.addEventListener('click', async (e) => {
                 selectedTeacher = teacher;
 
@@ -532,37 +911,101 @@ document.addEventListener('DOMContentLoaded', async () => {
             h3Vid.innerText = '🔥 Popüler Videolar';
             contentGrid.appendChild(h3Vid);
 
-            teacher.popularVideos.forEach(video => {
-                const card = document.createElement('div');
-                card.className = 'video-card';
+            // --- Sorting Controls for Popular Videos ---
+            const controlsContainer = document.createElement('div');
+            controlsContainer.style.gridColumn = '1 / -1';
+            controlsContainer.style.display = 'flex';
+            controlsContainer.style.gap = '10px';
+            controlsContainer.style.justifyContent = 'flex-end';
+            controlsContainer.style.marginBottom = '20px';
 
-                const thumbUrl = video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url;
-                const title = video.snippet?.title;
-                const viewCount = video.statistics?.viewCount || 0;
-                // viewCount formatla (örn: 1.5M, 100K)
-                const formattedViews = new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(viewCount);
+            const btnSortView = document.createElement('button');
+            btnSortView.innerHTML = '<i class="fas fa-eye"></i> En Çok İzlenen';
+            btnSortView.className = 'sort-btn'; // Use existing class if available or style inline (reusing from playlist view style)
+            btnSortView.style.padding = '8px 15px';
+            btnSortView.style.cursor = 'pointer';
+            btnSortView.style.border = '1px solid #ddd';
+            btnSortView.style.borderRadius = '5px';
+            btnSortView.style.backgroundColor = 'white';
 
-                card.addEventListener('click', () => {
-                    window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
-                });
+            const btnSortLike = document.createElement('button');
+            btnSortLike.innerHTML = '<i class="fas fa-thumbs-up"></i> En Çok Beğenilen';
+            btnSortLike.className = 'sort-btn';
+            btnSortLike.style.padding = '8px 15px';
+            btnSortLike.style.cursor = 'pointer';
+            btnSortLike.style.border = '1px solid #ddd';
+            btnSortLike.style.borderRadius = '5px';
+            btnSortLike.style.backgroundColor = 'white';
 
-                card.innerHTML = `
-                    <div class="thumbnail-container">
-                        <img src="${thumbUrl}" alt="${title}">
-                        <span class="badge" style="background: var(--error);"><i class="fab fa-youtube"></i> YouTube</span>
-                    </div>
-                    <div class="video-info">
-                        <h3 style="font-size: 1rem; line-height:1.4;">${title}</h3>
-                <div class="video-footer" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size: 0.8rem; color: #666; display:flex; gap:10px;">
-                                <span><i class="fas fa-eye"></i> ${formattedViews}</span>
-                                <span><i class="fas fa-thumbs-up"></i> ${new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(video.statistics?.likeCount || 0)}</span>
-                            </div>
-                            <button class="watch-btn" style="padding: 5px 10px; font-size: 0.8rem;">İzle</button>
+            controlsContainer.appendChild(btnSortView);
+            controlsContainer.appendChild(btnSortLike);
+            contentGrid.appendChild(controlsContainer);
+
+            // --- Video Grid Container for Popular Videos ---
+            const popularVideoGrid = document.createElement('div');
+            popularVideoGrid.style.gridColumn = '1 / -1';
+            popularVideoGrid.style.display = 'grid';
+            popularVideoGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+            popularVideoGrid.style.gap = '20px';
+            contentGrid.appendChild(popularVideoGrid); // Append specific grid to main content grid
+
+            function renderPopularVideosList(list) {
+                popularVideoGrid.innerHTML = '';
+                list.forEach(video => {
+                    const card = document.createElement('div');
+                    card.className = 'video-card';
+
+                    const thumbUrl = video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url;
+                    const title = video.snippet?.title;
+                    const viewCount = video.statistics?.viewCount || 0;
+                    const formattedViews = new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(viewCount);
+
+                    card.addEventListener('click', () => {
+                        // History Save
+                        const mainCategory = selectedCategory; // örn: YKS
+                        const subCat = selectedSubCategory; // örn: TYT
+
+                        // Exam Type Logic
+                        // Eğer subCat varsa exam = subCat (TYT), yoksa exam = mainCategory (KPSS)
+                        const examType = subCat ? subCat : mainCategory;
+
+                        saveVideoHistory(teacher.dbId, `https://www.youtube.com/watch?v=${video.id}`, selectedSubject, examType);
+
+                        window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+                    });
+
+                    card.innerHTML = `
+                        <div class="thumbnail-container">
+                            <img src="${thumbUrl}" alt="${title}">
+                            <span class="badge" style="background: var(--error);"><i class="fab fa-youtube"></i> YouTube</span>
                         </div>
-                    </div>
-                `;
-                contentGrid.appendChild(card);
+                        <div class="video-info">
+                            <h3 style="font-size: 1rem; line-height:1.4;">${title}</h3>
+                            <div class="video-footer" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="font-size: 0.8rem; color: #666; display:flex; gap:10px;">
+                                    <span><i class="fas fa-eye"></i> ${formattedViews}</span>
+                                    <span><i class="fas fa-thumbs-up"></i> ${new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(video.statistics?.likeCount || 0)}</span>
+                                </div>
+                                <button class="watch-btn" style="padding: 5px 10px; font-size: 0.8rem;">İzle</button>
+                            </div>
+                        </div>
+                    `;
+                    popularVideoGrid.appendChild(card);
+                });
+            }
+
+            // Initial render
+            renderPopularVideosList(teacher.popularVideos);
+
+            // Event Listeners
+            btnSortView.addEventListener('click', () => {
+                const sorted = [...teacher.popularVideos].sort((a, b) => Number(b.statistics?.viewCount || 0) - Number(a.statistics?.viewCount || 0));
+                renderPopularVideosList(sorted);
+            });
+
+            btnSortLike.addEventListener('click', () => {
+                const sorted = [...teacher.popularVideos].sort((a, b) => Number(b.statistics?.likeCount || 0) - Number(a.statistics?.likeCount || 0));
+                renderPopularVideosList(sorted);
             });
         } else {
             if (!teacher.playlists || teacher.playlists.length === 0) {
@@ -643,6 +1086,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const formattedLikes = new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(likeCount);
 
                 card.addEventListener('click', () => {
+                    // History Save
+                    // Not: Burada 'selectedTeacher' global değişkenini kullanabiliriz çünkü playlist'e girerken teacher seçiliydi
+                    // Ancak veri güvenliği için teacher objesi parametre olarak gelse daha iyi olurdu. 
+                    // Şimdilik selectedTeacher global değişkenine güveniyoruz.
+
+                    const mainCategory = selectedCategory;
+                    const subCat = selectedSubCategory;
+                    const examType = subCat ? subCat : mainCategory;
+
+                    // selectedTeacher global değişkeni renderTeachers fonksiyonunda atanıyordu.
+                    const channelId = selectedTeacher ? selectedTeacher.dbId : null;
+
+                    if (channelId) {
+                        saveVideoHistory(channelId, `https://www.youtube.com/watch?v=${videoId}`, selectedSubject, examType);
+                    }
+
                     window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
                 });
 
@@ -678,6 +1137,488 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSortedVideos(sorted);
         });
     }
+
+    // --- İSTATİSTİKLER SAYFASI ---
+    async function renderStatsPage() {
+        currentLevel = 'stats';
+        navBar.style.display = 'none';
+        contentGrid.innerHTML = '';
+        pageTitle.innerText = ''; // Header içinde zaten yazacağız ya da burayı kullanabiliriz.
+
+        // Header
+        const header = document.createElement('div');
+        header.style.gridColumn = '1/-1';
+        header.innerHTML = '<h2>📊 İstatistikler</h2>';
+        contentGrid.appendChild(header);
+
+        // Container
+        const container = document.createElement('div');
+        container.style.gridColumn = '1 / -1';
+        container.style.display = 'grid';
+        container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(350px, 1fr))';
+        container.style.gap = '30px';
+        container.style.marginTop = '20px';
+        contentGrid.appendChild(container);
+
+        // --- SOL: Konu Seviyeleri ---
+        const leftCol = document.createElement('div');
+        leftCol.style.background = 'white';
+        leftCol.style.padding = '20px';
+        leftCol.style.borderRadius = '15px';
+        leftCol.style.boxShadow = '0 5px 15px rgba(0,0,0,0.05)';
+        leftCol.innerHTML = '<h3 style="margin-bottom:15px; color:var(--primary-color);">📚 Konu Seviyeleri</h3><p>Yükleniyor...</p>';
+        container.appendChild(leftCol);
+
+        // --- SAĞ: Bugün İzlenen Kanallar ---
+        const rightCol = document.createElement('div');
+        rightCol.style.background = 'white';
+        rightCol.style.padding = '20px';
+        rightCol.style.borderRadius = '15px';
+        rightCol.style.boxShadow = '0 5px 15px rgba(0,0,0,0.05)';
+        rightCol.innerHTML = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3><p>Yükleniyor...</p>';
+        container.appendChild(rightCol);
+
+        try {
+            // Verileri Çek
+            const [prefs, history] = await Promise.all([
+                fetchUserLearningPreferences(),
+                fetchTodayVideoHistory()
+            ]);
+
+            // --- Render Left (Preferences) ---
+            if (prefs && prefs.length > 0) {
+                let html = '<h3 style="margin-bottom:15px; color:var(--primary-color);">📚 Konu Seviyeleri</h3>';
+                html += '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;">';
+                html += '<thead><tr style="background:#f9f9f9; text-align:left;"><th style="padding:10px;">Konu</th><th style="padding:10px;">Seviye</th></tr></thead>';
+                html += '<tbody>';
+                prefs.forEach(p => {
+                    html += `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${p.topic}</td><td style="padding:10px; font-weight:bold; color:var(--secondary-color);">${p.level}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                leftCol.innerHTML = html;
+            } else {
+                leftCol.innerHTML = '<h3 style="margin-bottom:15px; color:var(--primary-color);">📚 Konu Seviyeleri</h3><p style="color:#666; font-style:italic;">Henüz seviye tespiti yapılmadı. AI Koç ile teste başla!</p>';
+            }
+
+            // --- Render Right (History) ---
+            if (history && history.length > 0) {
+                let html = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3>';
+                html += '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;">';
+                html += '<thead><tr style="background:#f9f9f9; text-align:left;"><th style="padding:10px;">Kanal</th><th style="padding:10px;">Ders</th><th style="padding:10px;">İşlem</th></tr></thead>';
+                html += '<tbody>';
+
+                history.forEach(h => {
+                    // Kanal ismini bul
+                    const ch = globalChannels.find(g => g.id === h.channel_id);
+                    const chName = ch ? ch.channel_name : 'Bilinmeyen Kanal';
+                    // Link
+                    const link = h.video_url;
+
+                    html += `<tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px; display:flex; align-items:center; gap:10px;">
+                            <img src="https://api.dicebear.com/7.x/initials/svg?seed=${chName}" style="width:24px; height:24px; border-radius:50%;">
+                            ${chName}
+                        </td>
+                        <td style="padding:10px;">${h.lesson || '-'}</td>
+                        <td style="padding:10px;"><a href="${link}" target="_blank" style="color:#e74c3c; text-decoration:none; font-weight:bold;"><i class="fas fa-play"></i> İzle</a></td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table></div>';
+                rightCol.innerHTML = html;
+            } else {
+                rightCol.innerHTML = '<h3 style="margin-bottom:15px; color:#e74c3c;">📺 Bugün İzlenen Kanallar</h3><p style="color:#666; font-style:italic;">Bugün henüz video izlenmedi.</p>';
+            }
+
+        } catch (err) {
+            console.error(err);
+            leftCol.innerHTML += '<p style="color:red;">Hata oluştu.</p>';
+            rightCol.innerHTML += '<p style="color:red;">Hata oluştu.</p>';
+        }
+    }
+
+    // --- VİDEOLARIM SAYFASI (ÖNERİLER) ---
+    async function renderMyVideosPage() {
+        currentLevel = 'my_videos';
+        navBar.style.display = 'none';
+        contentGrid.innerHTML = '';
+
+        // Header
+        const header = document.createElement('div');
+        header.style.gridColumn = '1/-1';
+        header.innerHTML = '<h2><i class="fas fa-play-circle" style="color:#e74c3c;"></i> Videolarım & Öneriler</h2>';
+        contentGrid.appendChild(header);
+
+        // Container
+        const container = document.createElement('div');
+        container.style.gridColumn = '1 / -1';
+        container.style.marginTop = '20px';
+        container.innerHTML = '<p>Yükleniyor...</p>';
+        contentGrid.appendChild(container);
+
+        try {
+            const prefs = await fetchUserLearningPreferences();
+
+            if (prefs && prefs.length > 0) {
+                const recommendations = await fetchRecommendations(prefs);
+
+                if (recommendations && recommendations.length > 0) {
+                    let html = '<h3 style="margin-bottom:15px; color:#2ecc71;"><i class="fas fa-lightbulb"></i> Sana Özel Video Önerileri</h3>';
+                    html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px;">';
+
+                    recommendations.forEach(rec => {
+                        html += `
+                        <div class="video-card" style="box-shadow:none; border:1px solid #eee;">
+                             <div class="thumbnail-container">
+                                <img src="${rec.thumbnail}" alt="${rec.title}">
+                                <span class="badge" style="background: var(--success);"><i class="fas fa-check"></i> Önerilen</span>
+                            </div>
+                            <div class="video-info">
+                                <h3 style="font-size: 1rem; line-height:1.4;">${rec.title}</h3>
+                                <p style="font-size:0.8rem; color:#666; margin-top:5px;">${rec.channelName} • ${rec.reason} Seviye</p>
+                                <button onclick="window.open('${rec.url}', '_blank')" class="watch-btn" style="width:100%; margin-top:10px; padding:8px;">Hemen İzle</button>
+                            </div>
+                        </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    container.innerHTML = html;
+
+                } else {
+                    container.innerHTML = '<h3 style="margin-bottom:15px; color:#2ecc71;"><i class="fas fa-lightbulb"></i> Sana Özel Video Önerileri</h3><p style="color:#666;">Şu an için uygun bir öneri bulunamadı.</p>';
+                }
+            } else {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:50px; background:white; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
+                        <i class="fas fa-robot fa-3x" style="color:var(--primary-color); margin-bottom:20px;"></i>
+                        <h3>Henüz Seviye Tespiti Yapılmadı</h3>
+                        <p style="color:#666; margin-bottom:20px;">Sana özel video önerileri sunabilmemiz için önce AI Koç ile seviyeni öğrenmelisin.</p>
+                        <button id="btnGoToAI" class="btn-save" style="padding:10px 30px;">AI Koça Git</button>
+                    </div>
+                 `;
+
+                setTimeout(() => {
+                    document.getElementById('btnGoToAI').addEventListener('click', () => {
+                        setActiveMenu(document.getElementById('menuAI'));
+                        renderAIPage();
+                    });
+                }, 0);
+            }
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p style="color:red;">Hata oluştu.</p>';
+        }
+    }
+
+    // --- ÖNERİ SİSTEMİ (Direct AI Mode) ---
+    async function fetchRecommendations(preferences) {
+        // Not: Artık globalChannels'a bağımlı değiliz, direkt YouTube araması yapıyoruz.
+        const recommendations = [];
+
+        // İlk 3 tercihi alalım
+        const activePrefs = preferences.slice(0, 3);
+
+        for (const pref of activePrefs) {
+            // Rate Limit önlemi: Her istek arasında 2 saniye bekle
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            try {
+                // 1. AI'dan arama terimi iste
+                const aiParams = await window.AIAnalyst.getRecommendationParams(pref.topic, pref.level);
+                const searchQuery = aiParams.searchQuery;
+
+                console.log(`AI Önerisi: ${pref.topic} (${pref.level}) -> "${searchQuery}"`);
+
+                // 2. YouTube'da genel arama yap
+                const searchResults = await YouTubeService.searchVideos(searchQuery, 1); // Sadece 1 adet en iyi sonuç
+
+                if (searchResults && searchResults.length > 0) {
+                    const vid = searchResults[0];
+                    const videoId = vid.id?.videoId || vid.id;
+
+                    recommendations.push({
+                        title: vid.snippet.title,
+                        thumbnail: vid.snippet.thumbnails?.medium?.url,
+                        url: `https://www.youtube.com/watch?v=${videoId}`,
+                        channelName: vid.snippet.channelTitle, // Arama sonucundan gelen kanal adı
+                        reason: `${pref.topic} (${pref.level})`,
+                        topic: pref.topic
+                    });
+                }
+            } catch (e) {
+                console.error("Öneri hatası:", e);
+            }
+
+            if (recommendations.length >= 6) break;
+        }
+
+        return recommendations;
+    }
+
+    async function fetchUserLearningPreferences() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabaseClient
+            .from('user_learning_preferences')
+            .select('topic, level')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false }); // En sonuncular üstte
+
+        if (error) {
+            console.error("fetchUserLearningPreferences error:", error);
+            return [];
+        }
+        return data;
+    }
+
+    async function fetchTodayVideoHistory() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return [];
+
+        // Bugünün başlangıcı
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString();
+
+        const { data, error } = await supabaseClient
+            .from('user_video_history')
+            .select('*')
+            .eq('user_id', user.id)
+            .gte('created_at', todayStr)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("fetchTodayVideoHistory error:", error);
+            return [];
+        }
+        return data;
+    }
+
+    async function renderAIPage() {
+        currentLevel = 'ai_coach';
+        navBar.style.display = 'none';
+        contentGrid.innerHTML = '';
+
+        // Container
+        const container = document.createElement('div');
+        container.style.gridColumn = '1 / -1';
+        container.style.maxWidth = '800px';
+        container.style.margin = '0 auto';
+        container.style.background = 'white';
+        container.style.padding = '30px';
+        container.style.borderRadius = '15px';
+        container.style.boxShadow = '0 5px 20px rgba(0,0,0,0.05)';
+        contentGrid.appendChild(container);
+
+        // Header
+        container.innerHTML = `
+            <div style="text-align:center; margin-bottom:30px;">
+                <h2 style="color:var(--primary-color); font-size:2rem;"><i class="fas fa-robot"></i> AI Öğrenme Koçu</h2>
+                <p style="color:#666;">Sana özel çalışma planı ve seviye tespiti.</p>
+            </div>
+            <div id="coachContent"></div>
+        `;
+
+        const coachContent = document.getElementById('coachContent');
+
+        // --- STEP 1: KONU SEÇİMİ ---
+        function renderStep1() {
+            coachContent.innerHTML = `
+                <div style="text-align:center;">
+                    <h3 style="margin-bottom:20px;">Hangi konuyu çalışmak istiyorsun?</h3>
+                    <input type="text" id="topicInput" placeholder="Örn: Üslü Sayılar, Python Döngüler..." 
+                           style="width:100%; padding:15px; border:2px solid #eee; border-radius:10px; font-size:1.1rem; margin-bottom:20px;">
+                    <button id="btnStartQuiz" class="btn-save" style="width:100%; padding:15px; font-size:1.1rem;">Testi Hazırla <i class="fas fa-arrow-right"></i></button>
+                </div>
+            `;
+
+            document.getElementById('btnStartQuiz').addEventListener('click', async () => {
+                const topic = document.getElementById('topicInput').value.trim();
+                if (!topic) {
+                    alert("Lütfen bir konu gir.");
+                    return;
+                }
+
+                // Loading
+                coachContent.innerHTML = `<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary-color);"></i><p style="margin-top:20px;">${topic} için seviye tespit testi hazırlanıyor...</p></div>`;
+
+                try {
+                    const quizData = await window.AIAnalyst.generateQuiz(topic);
+                    renderStep2(quizData);
+                } catch (err) {
+                    console.error(err);
+                    alert("Hata oluştu.");
+                    renderStep1();
+                }
+            });
+        }
+
+        // --- STEP 2: TEST ÇÖZME ---
+        function renderStep2(quizData) {
+            let html = `<h3 style="text-align:center; margin-bottom:20px;">📝 ${quizData.topic} Seviye Tespit Testi</h3>`;
+            html += `<form id="quizForm">`;
+
+            quizData.questions.forEach((q, index) => {
+                html += `
+                    <div style="margin-bottom:20px; background:#f9f9f9; padding:20px; border-radius:10px;">
+                        <p style="font-weight:bold; margin-bottom:10px;">${q.text}</p>
+                `;
+
+                if (q.type === 'multiple') {
+                    q.options.forEach(opt => {
+                        html += `
+                            <label style="display:block; margin-bottom:5px; cursor:pointer;">
+                                <input type="radio" name="q${q.id}" value="${opt}" required> ${opt}
+                            </label>
+                        `;
+                    });
+                } else {
+                    html += `<input type="text" name="q${q.id}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">`;
+                }
+                html += `</div>`;
+            });
+
+            html += `
+                <button type="submit" class="btn-save" style="width:100%; padding:15px; font-size:1.1rem; margin-top:10px;">Testi Bitir ve Analiz Et</button>
+            `;
+            html += `</form>`;
+
+            coachContent.innerHTML = html;
+
+            document.getElementById('quizForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const answers = {};
+                for (let [key, value] of formData.entries()) {
+                    answers[key] = value;
+                }
+
+                // Loading
+                coachContent.innerHTML = `<div style="text-align:center; padding:50px;"><i class="fas fa-microchip fa-spin fa-3x" style="color:var(--primary-color);"></i><p style="margin-top:20px;">Cevapların analiz ediliyor ve çalışma planın oluşturuluyor...</p></div>`;
+
+                try {
+                    const result = await window.AIAnalyst.evaluateQuiz(quizData.topic, answers);
+                    renderStep3(quizData.topic, result);
+                    saveResultToDB(quizData.topic, result);
+                } catch (err) {
+                    console.error(err);
+                    alert("Analiz hatası.");
+                }
+            });
+        }
+
+        // --- STEP 3: SONUÇ VE PLAN ---
+        function renderStep3(topic, result) {
+            const html = `
+                <div style="text-align:center; margin-bottom:30px;">
+                    <h3 style="color:var(--success);">Analiz Tamamlandı! 🎉</h3>
+                    <p style="font-size:1.2rem;">Seviyen: <strong>${result.level}</strong></p>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+                    <div style="background:#e8f5e9; padding:20px; border-radius:10px;">
+                        <h4 style="color:#2e7d32; margin-bottom:10px;"><i class="fas fa-check-circle"></i> Güçlü Yönlerin</h4>
+                        <ul>
+                            ${result.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="background:#ffebee; padding:20px; border-radius:10px;">
+                        <h4 style="color:#c62828; margin-bottom:10px;"><i class="fas fa-exclamation-circle"></i> Geliştirmen Gerekenler</h4>
+                        <ul>
+                            ${result.weaknesses.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background:#fff3e0; padding:25px; border-radius:10px; border:2px solid #ffe0b2;">
+                    <h3 style="color:#ef6c00; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Sana Özel Çalışma Planı</h3>
+                    <p style="margin-bottom:15px; font-style:italic;">"${result.plan.suggestion}"</p>
+                    <div style="background:white; padding:15px; border-radius:5px;">
+                        <h5 style="margin-bottom:10px;">Program: ${result.plan.schedule}</h5>
+                        <ul style="list-style-type:none; padding:0;">
+                            ${result.plan.tasks.map(t => `<li style="padding:8px 0; border-bottom:1px solid #eee;"><i class="fas fa-angle-right" style="color:#ef6c00;"></i> ${t}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="text-align:center; margin-top:30px;">
+                    <button id="btnNewTopic" class="btn-cancel" style="padding:10px 30px;">Yeni Konu Çalış</button>
+                </div>
+            `;
+
+            coachContent.innerHTML = html;
+
+            document.getElementById('btnNewTopic').addEventListener('click', () => {
+                renderStep1();
+            });
+        }
+
+        async function saveResultToDB(topic, result) {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            // user_infos { user_id, data: JSON } (Existing Logic)
+            try {
+                // Mevcut veriyi al
+                let { data: currentRecord } = await supabaseClient
+                    .from('user_infos')
+                    .select('data')
+                    .eq('user_id', user.id)
+                    .single();
+
+                let currentData = [];
+                if (currentRecord && currentRecord.data) {
+                    currentData = Array.isArray(currentRecord.data) ? currentRecord.data : [currentRecord.data];
+                }
+
+                // Yeni sonucu ekle
+                const newEntry = {
+                    topic: topic,
+                    date: new Date().toISOString(),
+                    result: result
+                };
+                currentData.push(newEntry);
+
+                // Kaydet (Original Table)
+                const { error } = await supabaseClient
+                    .from('user_infos')
+                    .upsert({ user_id: user.id, data: currentData });
+
+                if (error) console.error("DB Error (user_infos):", error);
+
+            } catch (err) {
+                console.error("Save process error (user_infos):", err);
+            }
+
+            // --- YENİ TABLOYA KAYIT (user_learning_preferences) ---
+            try {
+                // Konu ve Seviye bilgisini kaydet
+                // Tablo: user_learning_preferences
+                // Kolonlar: user_id, topic, level
+                const { error: errorPref } = await supabaseClient
+                    .from('user_learning_preferences')
+                    .insert({
+                        user_id: user.id,
+                        topic: topic,
+                        level: result.level  // result objesinden gelen seviye bilgisi (String)
+                    });
+
+                if (errorPref) {
+                    console.error("DB Error (user_learning_preferences):", errorPref);
+                } else {
+                    console.log("Learning preference saved successfully.");
+                }
+
+            } catch (err) {
+                console.error("Save process error (user_learning_preferences):", err);
+            }
+        }
+
+        renderStep1();
+    }
+
 
     // --- ÇIKIŞ YAP ---
     document.getElementById('logoutBtn').addEventListener('click', async () => {

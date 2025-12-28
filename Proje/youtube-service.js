@@ -2,7 +2,7 @@
    YouTube Data API v3 Service
    ================================ */
 
-const YOUTUBE_API_KEY = "AIzaSyAo7sC0BXtI32nW8YHmVz2WLLQMjHmDQq0";
+const YOUTUBE_API_KEY = "AIzaSyAm0CjFKZ-Rheauy0Qvp5xCyfsjYYEkMcc";
 
 window.YouTubeService = {
 
@@ -151,5 +151,40 @@ window.YouTubeService = {
             }
             return item;
         });
+    },
+
+    /* --------------------------------
+       8️⃣ Kanal İçi Video Arama (Query ile)
+    -------------------------------- */
+    async searchVideosByChannel(channelUrl, query, maxResults = 5) {
+        const channelId = await this.getChannelIdFromUrl(channelUrl);
+        if (!channelId) return [];
+
+        try {
+            const res = await fetch(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`
+            );
+            const data = await res.json();
+            return data.items || [];
+        } catch (error) {
+            console.error("searchVideosByChannel hatası:", error);
+            return [];
+        }
+    },
+
+    /* --------------------------------
+       9️⃣ Genel Video Arama (Kanal Bağımsız)
+    -------------------------------- */
+    async searchVideos(query, maxResults = 5) {
+        try {
+            const res = await fetch(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`
+            );
+            const data = await res.json();
+            return data.items || [];
+        } catch (error) {
+            console.error("searchVideos hatası:", error);
+            return [];
+        }
     }
 };

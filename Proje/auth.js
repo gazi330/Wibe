@@ -89,4 +89,24 @@ class EmailAuthService {
       throw e;
     }
   }
+
+  async signInWithGoogle() {
+    if (!supabaseClient) {
+      console.error("Supabase client not initialized");
+      return;
+    }
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Google Login Error:", e.message);
+      throw e;
+    }
+  }
 }
